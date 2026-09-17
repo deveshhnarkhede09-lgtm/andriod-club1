@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyFlow AI | AI-Powered Student Revision & Practice Workspace</title>
+  <meta name="description" content="One polished AI flow that transforms lecture materials into condensed revision notes and auto-generated practice quizzes. Built for Google for Developers x Hack2Skill x Android Club, VIT Bhopal.">
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+
+  <!-- Google Fonts: Outfit & Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Core Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+
+  <!-- External CDNs: Lucide Icons, Canvas Confetti, PDF.js -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+
+  <!-- Animated Background: Stars/Particles & Glowing Blobs -->
+  <canvas id="stars-canvas" class="stars-canvas" aria-hidden="true"></canvas>
+  <div class="ai-ambient-glow" aria-hidden="true">
+    <div class="glow-blob blob-purple"></div>
+    <div class="glow-blob blob-cyan"></div>
+    <div class="glow-blob blob-indigo"></div>
+  </div>
+
+  <!-- Top Hackathon Collaboration Banner -->
+  <aside class="hackathon-banner" aria-label="Hackathon attribution">
+    <div class="brand-collab">
+      <span>⚡ <strong>Google for Developers</strong></span>
+      <span>×</span>
+      <span><strong>Hack2Skill</strong></span>
+      <span>×</span>
+      <span><strong>Android Club, VIT Bhopal</strong></span>
+    </div>
+    <span class="tag-badge">Track 01: AI Productivity & Automation</span>
+  </aside>
+
+  <!-- Navigation Header -->
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <a href="#" class="logo-wrapper" id="nav-logo-link" aria-label="StudyFlow AI Home">
+        <div class="logo-icon">
+          <img src="assets/logo.svg" alt="StudyFlow Logo" width="36" height="36">
+        </div>
+        <div class="logo-text">
+          <span class="logo-title">StudyFlow<span style="color:#06B6D4;">.ai</span></span>
+          <span class="logo-subtitle">Student Revision & Practice Engine</span>
+        </div>
+      </a>
+
+      <div class="nav-actions">
+        <div id="engine-status-badge">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+        <!-- Dark / Light Mode Segmented Control: ☀️ Light | 🌙 Dark -->
+        <div class="theme-segmented-switch" id="theme-segmented-switch" role="radiogroup" aria-label="Dark / Light Mode">
+          <button type="button" class="theme-switch-btn" id="theme-btn-light" role="radio" aria-checked="false" title="Switch to Light mode">
+            <span>☀️ Light</span>
+          </button>
+          <span class="theme-switch-divider" aria-hidden="true">|</span>
+          <button type="button" class="theme-switch-btn active" id="theme-btn-dark" role="radio" aria-checked="true" title="Switch to Dark mode">
+            <span>🌙 Dark</span>
+          </button>
+        </div>
+
+        <button class="btn btn-secondary btn-sm" id="open-settings-btn" title="AI Settings (Google Gemini Key)">
+          <i data-lucide="settings" style="width: 16px; height: 16px;"></i>
+          <span>AI Engine</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Hero Section -->
+  <main class="container">
+    <section class="hero-section">
+      <div class="hero-badge">
+        <i data-lucide="sparkles" class="sparkle" style="width: 14px; height: 14px;"></i>
+        <span>AI Productivity & Automation • End-to-End Flow</span>
+      </div>
+      <h1 class="hero-title">
+        Turn Lectures Into <span class="gradient-span glow-text">Knowledge.</span>
+      </h1>
+      <p class="hero-subtitle">
+        Drop any lecture PDF, slide deck, or transcript. Instantly distill hours of study into high-yield revision notes and an interactive auto-generated practice quiz.
+      </p>
+
+      <!-- Visual 4-Step Pipeline Indicator -->
+      <div class="workflow-strip" aria-label="Workflow stages">
+        <div class="workflow-step active">
+          <span class="step-num">1</span>
+          <span>Upload Lecture</span>
+        </div>
+        <span class="workflow-arrow">→</span>
+        <div class="workflow-step">
+          <span class="step-num">2</span>
+          <span>AI Semantic Extraction</span>
+        </div>
+        <span class="workflow-arrow">→</span>
+        <div class="workflow-step">
+          <span class="step-num">3</span>
+          <span>Condensed Notes</span>
+        </div>
+        <span class="workflow-arrow">→</span>
+        <div class="workflow-step">
+          <span class="step-num">4</span>
+          <span>Interactive Quiz & Recall</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- App Stage Card: Input & Upload -->
+    <section class="input-stage-card" id="input-stage-card">
+      <div class="input-modes-nav">
+        <!-- Mode Switcher -->
+        <div class="mode-toggle-group">
+          <button class="mode-tab-btn active" id="mode-upload-btn">
+            <i data-lucide="file-up" style="width: 16px; height: 16px;"></i>
+            <span>Upload Document</span>
+          </button>
+          <button class="mode-tab-btn" id="mode-paste-btn">
+            <i data-lucide="file-text" style="width: 16px; height: 16px;"></i>
+            <span>Paste Lecture Notes</span>
+          </button>
+        </div>
+
+        <!-- 1-Click Academic Presets (Crucial for instant evaluation) -->
+        <div class="presets-group">
+          <span class="presets-label">⚡ 1-Click Formats:</span>
+          <button class="preset-chip preset-pdf" data-preset="physics" title="Load Physics_Chapter_3.pdf">
+            <span>📄 PDF: Physics_Chapter_3.pdf</span>
+          </button>
+          <button class="preset-chip preset-docx" data-preset="docx" title="Load Literature_Essay_Draft.docx">
+            <span>📘 DOCX: Literature_Essay_Draft.docx</span>
+          </button>
+          <button class="preset-chip preset-pptx" data-preset="pptx" title="Load Biology_Lecture_Slides.pptx">
+            <span>📙 PPTX: Biology_Lecture_Slides.pptx</span>
+          </button>
+          <button class="preset-chip preset-txt" data-preset="txt" title="Load Economics_Transcript.txt">
+            <span>📗 TXT: Economics_Transcript.txt</span>
+          </button>
+          <button class="preset-chip preset-md" data-preset="md" title="Load Operating_Systems_Notes.md">
+            <span>📝 MD: Operating_Systems_Notes.md</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- File Dropzone Container -->
+      <div id="upload-zone-container">
+        <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload lecture PDF or document">
+          <!-- Animated SVG Dashed Border -->
+          <svg class="dropzone-animated-border" aria-hidden="true">
+            <defs>
+              <linearGradient id="dash-border-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#8B5CF6" />
+                <stop offset="50%" stop-color="#38BDF8" />
+                <stop offset="100%" stop-color="#EC4899" />
+              </linearGradient>
+            </defs>
+            <rect x="3" y="3" width="calc(100% - 6px)" height="calc(100% - 6px)" rx="18" ry="18" fill="none" stroke="url(#dash-border-grad)" stroke-width="2.5" class="animated-dash-rect" />
+          </svg>
+
+          <input type="file" id="file-input" accept=".pdf,.docx,.doc,.pptx,.ppt,.txt,.md" style="display: none;">
+
+          <!-- Dynamic Format Document Icon with Glowing Aura (PDF, DOCX, PPTX, TXT, MD) -->
+          <div class="format-icon-wrapper" id="dropzone-icon-container">
+            <div class="format-icon-card">
+              <svg class="format-file-svg" id="dropzone-format-svg" viewBox="0 0 54 66" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 0C1.79086 0 0 1.79086 0 4V62C0 64.2091 1.79086 66 4 66H50C52.2091 66 54 64.2091 54 62V18L36 0H4Z" fill="#14193B" stroke="rgba(244, 63, 94, 0.45)" stroke-width="2" id="format-svg-body"/>
+                <path d="M36 0V18H54L36 0Z" fill="rgba(244, 63, 94, 0.3)" stroke="rgba(244, 63, 94, 0.45)" stroke-width="2" id="format-svg-corner"/>
+                <rect x="6" y="27" width="42" height="20" rx="4" fill="#E11D48" id="format-svg-badge-rect"/>
+                <text x="27" y="42" fill="#FFFFFF" font-family="'Outfit', sans-serif" font-weight="800" font-size="12" text-anchor="middle" letter-spacing="1" id="format-svg-badge-text">PDF</text>
+                <line x1="12" y1="54" x2="42" y2="54" stroke="rgba(255, 255, 255, 0.4)" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+              <div class="format-icon-glow" id="dropzone-icon-glow"></div>
+            </div>
+          </div>
+
+          <h3 class="dropzone-title" id="dropzone-title">Drop your lecture file here, or browse</h3>
+          <p class="dropzone-desc" id="dropzone-desc">Supports <strong>PDF, DOCX, PPTX, TXT, and Markdown</strong></p>
+          
+          <div class="supported-formats" id="supported-formats-bar">
+            <span class="format-badge active-format" data-format="pdf" title="Switch to PDF mode">.PDF</span>
+            <span class="format-badge" data-format="docx" title="Switch to DOCX mode">.DOCX</span>
+            <span class="format-badge" data-format="pptx" title="Switch to PPTX mode">.PPTX</span>
+            <span class="format-badge" data-format="txt" title="Switch to TXT mode">.TXT</span>
+            <span class="format-badge" data-format="md" title="Switch to MD mode">.MD</span>
+          </div>
+        </div>
+
+        <!-- Selected File Preview Banner -->
+        <div class="file-selected-card" id="file-selected-card">
+          <div class="file-info">
+            <div class="file-icon-box" id="selected-file-icon-box">
+              <span id="selected-file-mini-icon">📄</span>
+            </div>
+            <div>
+              <div class="file-name" id="selected-file-name">
+                <span class="file-check-badge">✓</span> Physics_Chapter_3.pdf
+              </div>
+              <div class="file-meta" id="selected-file-size">1.8 MB • Ready to Synthesize</div>
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="remove-file-btn" title="Remove file">
+            <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+            <span>Remove</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Paste Textarea Mode -->
+      <div class="paste-container" id="paste-container">
+        <textarea 
+          class="lecture-textarea" 
+          id="lecture-textarea" 
+          placeholder="Paste lecture transcript, reading assignment, or textbook chapter notes here (minimum 50 characters)..."
+          aria-label="Lecture content input"
+        ></textarea>
+        <div class="textarea-footer">
+          <span>Pro tip: You can paste lecture slide outlines, YouTube transcripts, or scanned OCR text.</span>
+          <span id="char-count">0 characters</span>
+        </div>
+      </div>
+
+      <!-- AI Study Mode (3 Modes: Quick Revision, Exam Preparation, Last-Minute Revision) -->
+      <div class="study-mode-container" id="study-mode-container">
+        <div class="study-mode-header">
+          <span class="study-mode-title">
+            <i data-lucide="sparkles" style="width: 17px; height: 17px; color: #A855F7;"></i>
+            <span>AI Study Mode</span>
+          </span>
+          <span class="pill pill-purple" id="active-mode-pill">🧠 Exam Preparation Active</span>
+        </div>
+
+        <div class="study-mode-cards-grid">
+          <!-- Mode 1: Quick Revision -->
+          <div class="study-mode-card" data-mode="quick" id="mode-card-quick" role="button" tabindex="0">
+            <div class="mode-card-top">
+              <span class="mode-emoji">📖</span>
+              <span class="mode-card-title">Quick Revision</span>
+            </div>
+            <p class="mode-card-desc">very short notes</p>
+            <div class="mode-card-meta">
+              <span class="mode-pill">⚡ Ultra-Concise</span>
+              <span class="mode-check-indicator" id="indicator-quick"></span>
+            </div>
+          </div>
+
+          <!-- Mode 2: Exam Preparation (Default) -->
+          <div class="study-mode-card active" data-mode="exam" id="mode-card-exam" role="button" tabindex="0">
+            <div class="mode-card-top">
+              <span class="mode-emoji">🧠</span>
+              <span class="mode-card-title">Exam Preparation</span>
+            </div>
+            <p class="mode-card-desc">detailed important points</p>
+            <div class="mode-card-meta">
+              <span class="mode-pill">🎯 In-Depth Mastery</span>
+              <span class="mode-check-indicator" id="indicator-exam">✓</span>
+            </div>
+          </div>
+
+          <!-- Mode 3: Last-Minute Revision -->
+          <div class="study-mode-card" data-mode="lastminute" id="mode-card-lastminute" role="button" tabindex="0">
+            <div class="mode-card-top">
+              <span class="mode-emoji">🎯</span>
+              <span class="mode-card-title">Last-Minute Revision</span>
+            </div>
+            <p class="mode-card-desc">only the most important information</p>
+            <div class="mode-card-meta">
+              <span class="mode-pill">🔥 High-Yield Only</span>
+              <span class="mode-check-indicator" id="indicator-lastminute"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subject & Quiz Length Controls -->
+      <div class="personalization-box">
+        <div class="personalization-grid">
+          <!-- Subject Domain -->
+          <div class="control-group">
+            <label class="control-label">Subject Domain:</label>
+            <div class="select-chip-group">
+              <button class="select-chip subject-chip active" data-subject="cs">💻 Computer Science</button>
+              <button class="select-chip subject-chip" data-subject="bio">🧬 Med & Biology</button>
+              <button class="select-chip subject-chip" data-subject="eng">⚙️ Engineering</button>
+              <button class="select-chip subject-chip" data-subject="business">📈 Business / Econ</button>
+              <button class="select-chip subject-chip" data-subject="humanities">⚖️ Law & Humanities</button>
+            </div>
+          </div>
+
+          <!-- Quiz Length -->
+          <div class="control-group">
+            <label class="control-label">Practice Quiz Questions:</label>
+            <div class="select-chip-group">
+              <button class="select-chip count-chip active" data-count="5">5 Questions (Fast Recall)</button>
+              <button class="select-chip count-chip" data-count="10">10 Questions (Comprehensive)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Primary Action Button -->
+      <div class="action-submit-bar">
+        <div class="action-tip">
+          <i data-lucide="shield-check" style="width: 16px; height: 16px; color: #10B981;"></i>
+          <span>Instant processing: Works 100% offline out-of-the-box or live via Gemini API</span>
+        </div>
+        <button class="btn btn-primary btn-lg" id="generate-btn">
+          <i data-lucide="sparkles" style="width: 20px; height: 20px;"></i>
+          <span>Synthesize Notes & Quiz</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Processing Visualizer (Animated AI Reading Pipeline) -->
+    <section class="processing-card" id="processing-card">
+      <div class="ai-processing-header">
+        <span class="ai-pulse-sparkle">✨</span>
+        <h2 class="processing-title" id="processing-main-title">AI is reading your lecture...</h2>
+      </div>
+
+      <!-- Live Block Progress Bar & Percentage: ███████████░░░ 78% -->
+      <div class="block-progress-card">
+        <div class="block-progress-display">
+          <span class="block-string" id="ai-blocks-display">███████████░░░</span>
+          <span class="block-percent-num" id="ai-percent-number">78%</span>
+        </div>
+        <div class="fluid-progress-track">
+          <div class="fluid-progress-bar" id="ai-fluid-bar" style="width: 78%;"></div>
+        </div>
+      </div>
+
+      <!-- Real-time Processing Tasks List -->
+      <div class="processing-tasks-list">
+        <div class="processing-task-item active" id="task-concepts">
+          <span class="task-status-icon">
+            <span class="task-spinner"></span>
+          </span>
+          <span class="task-label">Extracting important concepts</span>
+        </div>
+        <div class="processing-task-item" id="task-definitions">
+          <span class="task-status-icon">
+            <span class="task-dot"></span>
+          </span>
+          <span class="task-label">Identifying definitions</span>
+        </div>
+        <div class="processing-task-item" id="task-quiz">
+          <span class="task-status-icon">
+            <span class="task-dot"></span>
+          </span>
+          <span class="task-label">Preparing exam questions</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Output Workspace Stage -->
+    <section class="workspace-results" id="workspace-results">
+      <!-- Results Action & Stats Header -->
+      <div class="results-header-card">
+        <div class="results-meta">
+          <div class="results-title-row">
+            <h2 class="results-doc-title" id="results-doc-title">Operating Systems Principles</h2>
+            <span class="pill pill-cyan" id="stat-subject-badge">CS</span>
+            <span class="pill pill-purple" id="stat-mode-badge">🧠 Exam Preparation</span>
+          </div>
+          <div class="doc-stats-badges">
+            <span class="pill pill-indigo">
+              <i data-lucide="clock" style="width: 13px; height: 13px;"></i>
+              <span id="stat-read-time">3 min read</span>
+            </span>
+            <span class="pill pill-success">
+              <i data-lucide="help-circle" style="width: 13px; height: 13px;"></i>
+              <span id="stat-questions">5 Practice Questions</span>
+            </span>
+            <span class="pill pill-amber">
+              <i data-lucide="check-square" style="width: 13px; height: 13px;"></i>
+              <span>Active Recall Enabled</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="results-actions">
+          <button class="btn btn-secondary btn-sm" id="export-trigger-btn">
+            <i data-lucide="share-2" style="width: 16px; height: 16px;"></i>
+            <span>Export & Share</span>
+          </button>
+          <button class="btn btn-ghost btn-sm" id="reset-btn" title="Create another revision set">
+            <i data-lucide="rotate-ccw" style="width: 16px; height: 16px;"></i>
+            <span>New Flow</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 5. Achievement Badges Shelf -->
+      <div class="achievements-shelf" id="achievements-shelf">
+        <div class="achievements-shelf-header">
+          <div class="shelf-title-wrap">
+            <span class="shelf-sparkle">🏅</span>
+            <span class="shelf-title">Achievement Badges</span>
+          </div>
+          <span class="pill pill-cyan" id="achievements-count-badge">1 / 4 Unlocked</span>
+        </div>
+        <div class="achievements-grid">
+          <!-- 1. Revision Ready -->
+          <div class="achievement-badge-card unlocked" id="badge-revision-ready">
+            <div class="badge-icon-box">📚</div>
+            <div class="badge-info">
+              <div class="badge-title">Revision Ready</div>
+              <div class="badge-criteria">notes generated</div>
+            </div>
+            <div class="badge-status-pill">UNLOCKED ✓</div>
+          </div>
+
+          <!-- 2. Fast Learner -->
+          <div class="achievement-badge-card" id="badge-fast-learner">
+            <div class="badge-icon-box">🔥</div>
+            <div class="badge-info">
+              <div class="badge-title">Fast Learner</div>
+              <div class="badge-criteria">completed quickly</div>
+            </div>
+            <div class="badge-status-pill">LOCKED 🔒</div>
+          </div>
+
+          <!-- 3. Quiz Master -->
+          <div class="achievement-badge-card" id="badge-quiz-master">
+            <div class="badge-icon-box">🏆</div>
+            <div class="badge-info">
+              <div class="badge-title">Quiz Master</div>
+              <div class="badge-criteria">5/5</div>
+            </div>
+            <div class="badge-status-pill">LOCKED 🔒</div>
+          </div>
+
+          <!-- 4. Exam Ready -->
+          <div class="achievement-badge-card" id="badge-exam-ready">
+            <div class="badge-icon-box">🎯</div>
+            <div class="badge-info">
+              <div class="badge-title">Exam Ready</div>
+              <div class="badge-criteria">completed revision + quiz</div>
+            </div>
+            <div class="badge-status-pill">LOCKED 🔒</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs: Notes | Practice Quiz | Flashcards -->
+      <div class="tabs-nav" role="tablist">
+        <button class="workspace-tab-btn active" id="tab-notes-btn" role="tab" aria-selected="true">
+          <i data-lucide="book-marked" style="width: 18px; height: 18px;"></i>
+          <span>Condensed Revision Notes</span>
+        </button>
+        <button class="workspace-tab-btn" id="tab-quiz-btn" role="tab" aria-selected="false">
+          <i data-lucide="award" style="width: 18px; height: 18px;"></i>
+          <span>Auto-Generated Practice Quiz</span>
+          <span class="tab-badge">Interactive</span>
+        </button>
+        <button class="workspace-tab-btn" id="tab-flashcards-btn" role="tab" aria-selected="false">
+          <i data-lucide="layers" style="width: 18px; height: 18px;"></i>
+          <span>Active Recall Flashcards</span>
+        </button>
+      </div>
+
+      <!-- Tab 1: Condensed Revision Notes -->
+      <div class="tab-pane active" id="pane-notes" role="tabpanel">
+        <div class="notes-container">
+          <!-- TL;DR Executive Takeaway Banner -->
+          <div class="tldr-card">
+            <div class="tldr-header">
+              <i data-lucide="zap" style="width: 20px; height: 20px; color: #F59E0B;"></i>
+              <span>Executive Summary & Core Takeaway</span>
+            </div>
+            <p class="tldr-text" id="tldr-text">
+              <!-- Dynamically populated -->
+            </p>
+          </div>
+
+          <!-- Notes Grid: Main Concepts & Sidebar Callouts -->
+          <div class="notes-grid">
+            <!-- Left Main Column: Conceptual Breakdown -->
+            <div class="notes-main-column" id="notes-sections-list">
+              <!-- Dynamically populated -->
+            </div>
+
+            <!-- Right Sidebar Column: Callout Cards & Active Recall Checklist -->
+            <div class="notes-sidebar-column">
+              <!-- Definitions, Formulas, Traps -->
+              <div id="callouts-list">
+                <!-- Dynamically populated -->
+              </div>
+
+              <!-- Cornell Active Recall Checklist -->
+              <div class="checklist-card">
+                <div class="section-card-title" style="margin-bottom: 8px;">
+                  <i data-lucide="check-circle-2" style="width: 18px; height: 18px; color: #10B981;"></i>
+                  <span>Active Recall Checklist</span>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">
+                  Tick each objective once you can explain it aloud without checking notes.
+                </p>
+                <div class="checklist-items" id="checklist-container">
+                  <!-- Dynamically populated -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Auto-Generated Interactive Practice Quiz -->
+      <div class="tab-pane" id="pane-quiz" role="tabpanel">
+        <div class="quiz-wrapper" id="quiz-wrapper">
+          <!-- Quiz Progress Indicator -->
+          <div class="quiz-progress-bar-container">
+            <div class="quiz-progress-fill" id="quiz-progress-fill"></div>
+          </div>
+
+          <!-- Active Question Card -->
+          <div class="quiz-card">
+            <div class="quiz-card-header">
+              <span class="quiz-index-badge" id="quiz-index-badge">Question 1 of 5</span>
+              <span class="quiz-score-badge">
+                <i data-lucide="check-circle" style="width: 15px; height: 15px; color: #10B981;"></i>
+                <span id="quiz-live-score">Score: 0/5</span>
+              </span>
+            </div>
+
+            <h3 class="question-text" id="quiz-question-text">Loading question...</h3>
+
+            <!-- Multiple Choice Options -->
+            <div class="quiz-options-list" id="quiz-options-list">
+              <!-- Dynamically populated -->
+            </div>
+
+            <!-- Step-by-step Diagnostic Rationale -->
+            <div class="quiz-explanation-card" id="quiz-explanation-card">
+              <div class="explanation-header" id="quiz-explanation-header">
+                <i data-lucide="info" style="width: 16px; height: 16px;"></i>
+                <span>Explanation:</span>
+              </div>
+              <p class="explanation-body" id="quiz-explanation-body"></p>
+            </div>
+
+            <!-- Question Navigation Footer -->
+            <div class="quiz-nav-footer">
+              <button class="btn btn-secondary btn-sm" id="quiz-prev-btn" style="visibility: hidden;">
+                <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>
+                <span>Previous</span>
+              </button>
+              <button class="btn btn-primary" id="quiz-next-btn" disabled>
+                <span>Next Question</span>
+                <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Quiz Completion Card (Score & Confetti) -->
+          <div class="quiz-finished-card" id="quiz-finished-card">
+            <div class="quiz-score-circle">
+              <span class="score-num" id="finished-score-num">5</span>
+              <span class="score-denom" id="finished-score-total">/5</span>
+            </div>
+            <h2 class="quiz-result-title" id="finished-result-title">Exam Ready! Outstanding.</h2>
+            <p class="quiz-result-feedback" id="finished-result-feedback">
+              You've demonstrated a high conceptual grasp of the material.
+            </p>
+
+            <!-- Earned Badges Row -->
+            <div class="quiz-earned-badges" id="quiz-earned-badges">
+              <span class="earned-badges-label">🎖️ Badges Status:</span>
+              <div class="earned-badges-row" id="earned-badges-row">
+                <!-- dynamically updated -->
+              </div>
+            </div>
+
+            <div class="quiz-result-buttons">
+              <button class="btn btn-primary" id="retake-quiz-btn">
+                <i data-lucide="rotate-ccw" style="width: 16px; height: 16px;"></i>
+                <span>Retake Quiz</span>
+              </button>
+              <button class="btn btn-secondary" onclick="document.getElementById('tab-notes-btn').click();">
+                <i data-lucide="book-open" style="width: 16px; height: 16px;"></i>
+                <span>Review Notes</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Active Recall Flashcards Deck -->
+      <div class="tab-pane" id="pane-flashcards" role="tabpanel">
+        <div class="flashcards-container">
+          <div class="flashcard-stats-row">
+            <span>Concept <strong id="flashcard-current-num">1</strong> of <strong id="flashcard-total-num">5</strong></span>
+            <span style="color: #A5B4FC;">Click card or button to reveal active recall definition</span>
+          </div>
+
+          <!-- 3D Flippable Card -->
+          <div class="flashcard-viewport">
+            <div class="flashcard-inner" id="flashcard-inner" tabindex="0" role="button" aria-label="Flip flashcard">
+              <!-- Front Side -->
+              <div class="flashcard-front">
+                <span class="flashcard-badge">Key Term</span>
+                <h3 class="flashcard-term" id="flashcard-term">Term</h3>
+                <span class="flashcard-hint">
+                  <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
+                  <span>Tap to flip</span>
+                </span>
+              </div>
+              <!-- Back Side -->
+              <div class="flashcard-back">
+                <span class="flashcard-badge">Active Recall Definition</span>
+                <p class="flashcard-def" id="flashcard-def">Definition</p>
+                <span class="flashcard-hint">
+                  <i data-lucide="check" style="width: 14px; height: 14px;"></i>
+                  <span>Core takeaway</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Flashcard Navigation Controls -->
+          <div class="flashcard-controls">
+            <button class="btn btn-secondary" id="flashcard-prev-btn" disabled>
+              <i data-lucide="chevron-left" style="width: 18px; height: 18px;"></i>
+              <span>Previous</span>
+            </button>
+            <button class="btn btn-primary" id="flashcard-flip-btn">
+              <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i>
+              <span>Flip Card</span>
+            </button>
+            <button class="btn btn-secondary" id="flashcard-next-btn">
+              <span>Next</span>
+              <i data-lucide="chevron-right" style="width: 18px; height: 18px;"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Export & Share Modal (Bonus Criteria) -->
+  <div class="modal-overlay" id="export-modal" role="dialog" aria-modal="true" aria-labelledby="export-modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="export-modal-title">Export Revision Materials</h3>
+        <button class="btn btn-ghost btn-sm" id="close-export-btn" aria-label="Close export modal">
+          <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 20px;">
+          Share your condensed notes or export them into your personal study repository:
+        </p>
+
+        <div class="export-formats-grid">
+          <div class="export-option-card" id="export-pdf-btn">
+            <div class="export-icon"><i data-lucide="file-text"></i></div>
+            <div class="export-title">AI Revision Sheet (PDF)</div>
+            <div class="export-desc">Professional revision sheet with Key Concepts, Definitions, Formulas & Exam Focus.</div>
+          </div>
+
+          <div class="export-option-card" id="export-md-btn">
+            <div class="export-icon"><i data-lucide="file-code"></i></div>
+            <div class="export-title">Markdown (.md)</div>
+            <div class="export-desc">Compatible with Notion, Obsidian, and GitHub.</div>
+          </div>
+
+          <div class="export-option-card" id="export-json-btn">
+            <div class="export-icon"><i data-lucide="database"></i></div>
+            <div class="export-title">Quiz JSON Data</div>
+            <div class="export-desc">Structured questions and answers in JSON format.</div>
+          </div>
+
+          <div class="export-option-card" id="export-copy-btn">
+            <div class="export-icon"><i data-lucide="copy"></i></div>
+            <div class="export-title">Copy Summary</div>
+            <div class="export-desc">Instant clipboard copy for study groups & Slack/Discord.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal: Google Gemini API Configuration -->
+  <div class="modal-overlay" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="settings-modal-title">AI Engine Settings</h3>
+        <button class="btn btn-ghost btn-sm" id="close-settings-btn" aria-label="Close settings modal">
+          <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom: 16px;">
+          <label style="font-size: 0.85rem; font-weight: 600; color: #E2E8F0; display: block; margin-bottom: 6px;">
+            Google Gemini API Key (Optional):
+          </label>
+          <input 
+            type="password" 
+            id="gemini-key-input" 
+            placeholder="AIzaSy..." 
+            style="width: 100%; padding: 10px 14px; background: rgba(15,23,42,0.8); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); color: #fff; font-family: var(--font-mono); font-size: 0.85rem;"
+          >
+          <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 6px;">
+            Your key stays securely in your browser's local storage and is sent directly to Google's API.
+          </span>
+        </div>
+
+        <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: var(--radius-sm); padding: 12px; font-size: 0.82rem; color: #C7D2FE;">
+          <strong>No API key? No problem!</strong><br>
+          StudyFlow AI includes a smart local semantic synthesizer that works 100% offline with zero configuration for any document or preset!
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost btn-sm" id="clear-key-btn">Clear Key</button>
+        <button class="btn btn-primary btn-sm" id="save-key-btn">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Professional AI Revision Sheet (Print & PDF Template) -->
+  <div class="printable-revision-sheet" id="printable-revision-sheet" aria-hidden="true" style="display: none;">
+    <div class="revision-sheet-frame">
+      <!-- Top Decorative Frame Header -->
+      <div class="sheet-frame-header">
+        <div class="sheet-ascii-border">╔═════════════════════════════════════════════════════════════════════════════════════════╗</div>
+        <div class="sheet-header-inner">
+          <div class="sheet-top-meta">
+            <span class="sheet-brand">⚡ STUDYFLOW AI • COMPACT STUDENT REVISION SUITE</span>
+            <span class="sheet-hackathon">Google for Developers × Hack2Skill × Android Club, VIT Bhopal</span>
+          </div>
+          <h1 class="sheet-main-title">AI REVISION SHEET</h1>
+          <h2 class="sheet-doc-title" id="sheet-doc-title">Engineering Mathematics</h2>
+          <div class="sheet-meta-tags">
+            <span class="sheet-tag-item"><strong>Subject:</strong> <span id="sheet-subject-val">Engineering</span></span>
+            <span class="sheet-tag-item"><strong>Study Mode:</strong> <span id="sheet-mode-val">🧠 Exam Preparation</span></span>
+            <span class="sheet-tag-item"><strong>Generated:</strong> <span id="sheet-date-val">September 2026</span></span>
+            <span class="sheet-tag-item"><strong>Status:</strong> Exam-Ready Distillation</span>
+          </div>
+        </div>
+        <div class="sheet-ascii-border">╠═════════════════════════════════════════════════════════════════════════════════════════╣</div>
+      </div>
+
+      <!-- TL;DR Executive Takeaway -->
+      <div class="sheet-tldr-box">
+        <div class="sheet-box-label">⚡ EXECUTIVE TL;DR</div>
+        <p class="sheet-tldr-body" id="sheet-tldr-text">
+          Comprehensive synthesized revision notes...
+        </p>
+      </div>
+
+      <!-- 4 Core Boxes matching user specifications -->
+      <div class="sheet-sections-container">
+        <!-- 1. ⭐ KEY CONCEPTS -->
+        <div class="sheet-section-block section-concepts">
+          <div class="sheet-section-title">
+            <span class="sheet-section-icon">⭐</span>
+            <span>KEY CONCEPTS</span>
+          </div>
+          <div class="sheet-section-body" id="sheet-concepts-list">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- 2. 📌 DEFINITIONS -->
+        <div class="sheet-section-block section-definitions">
+          <div class="sheet-section-title">
+            <span class="sheet-section-icon">📌</span>
+            <span>DEFINITIONS</span>
+          </div>
+          <div class="sheet-section-body" id="sheet-definitions-list">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- 3. 🧮 IMPORTANT FORMULAS -->
+        <div class="sheet-section-block section-formulas">
+          <div class="sheet-section-title">
+            <span class="sheet-section-icon">🧮</span>
+            <span>IMPORTANT FORMULAS</span>
+          </div>
+          <div class="sheet-section-body" id="sheet-formulas-list">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- 4. 🎯 EXAM FOCUS -->
+        <div class="sheet-section-block section-exam-focus">
+          <div class="sheet-section-title">
+            <span class="sheet-section-icon">🎯</span>
+            <span>EXAM FOCUS & HIGH-YIELD TRAPS</span>
+          </div>
+          <div class="sheet-section-body" id="sheet-exam-list">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Frame Border & Footer -->
+      <div class="sheet-frame-footer">
+        <div class="sheet-ascii-border">╚═════════════════════════════════════════════════════════════════════════════════════════╝</div>
+        <div class="sheet-footer-credits">
+          <span>Prepared by StudyFlow AI Engine • Track 01: AI Productivity & Automation</span>
+          <span>Verified Revision Document</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-content">
+      <div class="footer-left">
+        <strong>StudyFlow AI • Problem 01: AI-Powered Student Workspace</strong>
+        <span>Google for Developers × Hack2Skill × Android Club, VIT Bhopal</span>
+      </div>
+      <div class="footer-right">
+        <span class="pill pill-success">Single End-to-End Flow Ready</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Application Logic Scripts -->
+  <script src="js/presets.js"></script>
+  <script src="js/pdf-reader.js"></script>
+  <script src="js/ai-engine.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
