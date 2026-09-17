@@ -91,10 +91,13 @@ def proxy_gemini():
 
 @app.route("/<path:path>")
 def serve_static(path):
-    """Serve static assets (CSS, JS, SVG, images) with fallback to index.html."""
+    """Serve static assets (CSS, JS, SVG, images) with proper MIME types."""
     target = os.path.join(BASE_DIR, path)
     if os.path.isfile(target):
         return send_from_directory(BASE_DIR, path)
+    # Don't mask missing CSS/JS/images as HTML, return 404 to avoid browser MIME type refusal
+    if path.startswith(("css/", "js/", "assets/")):
+        return f"Asset not found: {path}", 404
     return send_from_directory(BASE_DIR, "index.html")
 
 if __name__ == "__main__":
